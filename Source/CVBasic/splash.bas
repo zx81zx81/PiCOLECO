@@ -104,20 +104,29 @@ newdir:
  
    numfile=1
    numfileold=0
+   numhighlight=0
+
  scegli:
    for c=1 to 6
      WAIT
    next c 
    
-   for i=1 to 30
-      d#=vpeek($1800+i+((numfile+2)*32))
-      vpoke $1800+i+((numfile+2)*32),d#+128
-	'  vpoke($1800+32*c+1),65+numfile
-   NEXT i	  
-    for i=1 to 30
-      d#=vpeek($1800+i+((numfileold+2)*32))
-      if numfileold<>0 then vpoke $1800+i+((numfileold+2)*32),d#-128
-   NEXT i	 
+   IF numfile<>numhighlight THEN
+     for i=1 to 30
+       d#=vpeek($1800+i+((numfile+2)*32))
+       vpoke $1800+i+((numfile+2)*32),d#+128
+       '  vpoke($1800+32*c+1),65+numfile
+       NEXT i	  
+       numhighlight=numfile
+   END IF
+
+   IF numfileold<>0 THEN
+     for i=1 to 30
+       d#=vpeek($1800+i+((numfileold+2)*32))
+       vpoke $1800+i+((numfileold+2)*32),d#-128
+     NEXT i	 
+     numfileold=0
+   END IF
    print at 32*23+2,"Btn1->Sel"
    print at 32*23+12,"Btn2->Dir-Up"
 
@@ -144,9 +153,25 @@ newdir:
    if (c and 128) then goto updir
    if (c and 64) then goto rungame
    if (c and 8)  THEN goto prevpage
-   if (c and 4) and (numfile<totfile) THEN numfileold=numfile:numfile=numfile+1:goto scegli
+   IF (c and 4) THEN
+      numfileold=numfile
+      IF (numfile<totfile) THEN 
+        numfile=numfile+1
+      ELSE
+        numfile=1
+      END IF 
+      goto scegli
+   END IF
    if (c and 2)  THEN goto nextpage
-   if (c=1) and (numfile>1) THEN numfileold=numfile:numfile=numfile-1:goto scegli
+   if (c=1) THEN
+     numfileold=numfile
+     IF (numfile>1) THEN 
+        numfile=numfile-1
+     ELSE 
+        numfile=totfile
+     END IF
+     goto scegli
+   END IF
 
    c=0
    goto scegli
